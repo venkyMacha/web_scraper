@@ -1,0 +1,31 @@
+name: Daily Scrape & Email
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # daily at 05:00 UTC; change as needed
+  workflow_dispatch: # allow manual runs
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run scraper (generate table_data.csv)
+        run: |
+          python scraper.py  # your scraping script should save table_data.csv
+
+      - name: Send email
+        env:
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python send_email.py
